@@ -1,0 +1,35 @@
+{
+    "permissions": {
+      "allow": [
+        "Bash(claude mcp add:*)",
+        "Bash(where npm)",
+        "Bash(npx n8n-mcp:*)",
+        "Bash(exit)",
+        "Bash(npm install:*)",
+        "Bash(npm cache clean:*)",
+        "Bash(claude --version)",
+        "mcp__n8n-mcp__tools_documentation",
+        "Bash(claude --debug)",
+        "Bash(where n8n-mcp)",
+        "Bash(npm run:*)",
+        "mcp__n8n-mcp__search_nodes",
+        "mcp__n8n-mcp__get_node_essentials",
+        "mcp__n8n-mcp__validate_workflow",
+        "mcp__n8n-mcp__validate_workflow_connections",
+        "Bash(dir:*)",
+        "Bash(ren:*)",
+        "Bash(mv:*)",
+        "Bash(grep:*)",
+        "mcp__n8n-mcp__get_node_documentation",
+        "mcp__n8n-mcp__search_node_properties",
+        "WebFetch(domain:docs.n8n.io)",
+        "Bash(mkdir:*)",
+        "WebFetch(domain:help.getzep.com)"
+      ],
+      "deny": []
+  },
+  "enabledMcpjsonServers": [
+    "n8n-mcp"
+  ],
+  "enableAllProjectMcpServers": true
+}
