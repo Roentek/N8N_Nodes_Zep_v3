@@ -24,7 +24,8 @@
       "mcp__n8n-mcp__search_node_properties",
       "WebFetch(domain:docs.n8n.io)",
       "Bash(mkdir:*)",
-      "WebFetch(domain:help.getzep.com)"
+      "WebFetch(domain:help.getzep.com)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   },

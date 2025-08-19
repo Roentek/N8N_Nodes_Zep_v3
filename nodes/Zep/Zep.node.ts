@@ -4,8 +4,10 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
+	IRequestOptions,
+	IHttpRequestMethods,
+	NodeConnectionType,
 } from 'n8n-workflow';
-import { OptionsWithUri } from 'request';
 
 export class Zep implements INodeType {
 	description: INodeTypeDescription = {
@@ -19,8 +21,8 @@ export class Zep implements INodeType {
 		defaults: {
 			name: 'ZEP Memory',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionType.Main],
+		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
 				name: 'zepApi',
@@ -574,9 +576,17 @@ export class Zep implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 		const credentials = await this.getCredentials('zepApi');
+		if (!credentials) {
+			throw new NodeOperationError(this.getNode(), 'No credentials provided');
+		}
 		const baseURL = credentials.baseUrl as string;
 		const apiKey = credentials.apiKey as string;
 
+		if (!baseURL || !apiKey) {
+			throw new NodeOperationError(this.getNode(), 'Missing required credentials: baseUrl and apiKey');
+		}
+
+		const nodeInstance = this as unknown as Zep;
 		for (let i = 0; i < items.length; i++) {
 			const resource = this.getNodeParameter('resource', i) as string;
 			const operation = this.getNodeParameter('operation', i) as string;
@@ -585,24 +595,24 @@ export class Zep implements INodeType {
 
 			try {
 				if (resource === 'thread') {
-					responseData = await this.handleThreadOperation(operation, i, baseURL, apiKey);
+					responseData = await nodeInstance.handleThreadOperation(this, operation, i, baseURL, apiKey);
 				} else if (resource === 'message') {
-					responseData = await this.handleMessageOperation(operation, i, baseURL, apiKey);
+					responseData = await nodeInstance.handleMessageOperation(this, operation, i, baseURL, apiKey);
 				} else if (resource === 'user') {
-					responseData = await this.handleUserOperation(operation, i, baseURL, apiKey);
+					responseData = await nodeInstance.handleUserOperation(this, operation, i, baseURL, apiKey);
 				} else if (resource === 'memory') {
-					responseData = await this.handleMemoryOperation(operation, i, baseURL, apiKey);
+					responseData = await nodeInstance.handleMemoryOperation(this, operation, i, baseURL, apiKey);
 				} else if (resource === 'graph') {
-					responseData = await this.handleGraphOperation(operation, i, baseURL, apiKey);
+					responseData = await nodeInstance.handleGraphOperation(this, operation, i, baseURL, apiKey);
 				}
 
 				returnData.push({ json: responseData });
 			} catch (error) {
 				if (this.continueOnFail()) {
-					returnData.push({ json: { error: error.message } });
+					returnData.push({ json: { error: error instanceof Error ? error.message : String(error) } });
 					continue;
 				}
-				throw new NodeOperationError(this.getNode(), error);
+				throw new NodeOperationError(this.getNode(), error instanceof Error ? error : new Error(String(error)));
 			}
 		}
 
@@ -610,17 +620,17 @@ export class Zep implements INodeType {
 	}
 
 	private async makeApiRequest(
-		this: IExecuteFunctions,
-		method: string,
+		executeFunctions: IExecuteFunctions,
+		method: IHttpRequestMethods,
 		endpoint: string,
 		baseURL: string,
 		apiKey: string,
-		body?: any,
-		query?: any,
-	) {
-		const options: OptionsWithUri = {
+		body?: Record<string, any>,
+		query?: Record<string, any>,
+	): Promise<any> {
+		const options: IRequestOptions = {
 			method,
-			uri: `${baseURL}${endpoint}`,
+			url: `${baseURL}${endpoint}`,
 			headers: {
 				'Authorization': `Api-Key ${apiKey}`,
 				'Content-Type': 'application/json',
@@ -636,19 +646,19 @@ export class Zep implements INodeType {
 			options.qs = query;
 		}
 
-		return this.helpers.request(options);
+		return executeFunctions.helpers.request(options);
 	}
 
 	private async handleThreadOperation(
-		this: IExecuteFunctions,
+		executeFunctions: IExecuteFunctions,
 		operation: string,
 		itemIndex: number,
 		baseURL: string,
 		apiKey: string,
-	) {
+	): Promise<any> {
 		switch (operation) {
 			case 'create':
-				const threadMetadata = this.getNodeParameter('threadMetadata', itemIndex, {}) as any;
+				const threadMetadata = executeFunctions.getNodeParameter('threadMetadata', itemIndex, {}) as any;
 				const createBody: any = {};
 				
 				if (threadMetadata.user_id) createBody.user_id = threadMetadata.user_id;
@@ -661,25 +671,25 @@ export class Zep implements INodeType {
 					}
 				}
 
-				return this.makeApiRequest('POST', '/threads', baseURL, apiKey, createBody);
+				return this.makeApiRequest(executeFunctions, 'POST', '/threads', baseURL, apiKey, createBody);
 
 			case 'get':
-				const getThreadId = this.getNodeParameter('threadId', itemIndex) as string;
-				return this.makeApiRequest('GET', `/threads/${getThreadId}`, baseURL, apiKey);
+				const getThreadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'GET', `/threads/${getThreadId}`, baseURL, apiKey);
 
 			case 'list':
 				const listQuery: any = {};
-				const limit = this.getNodeParameter('limit', itemIndex, 50) as number;
-				const page = this.getNodeParameter('page', itemIndex, 1) as number;
+				const limit = executeFunctions.getNodeParameter('limit', itemIndex, 50) as number;
+				const page = executeFunctions.getNodeParameter('page', itemIndex, 1) as number;
 				
 				listQuery.page_size = limit;
 				listQuery.page_number = page;
 
-				return this.makeApiRequest('GET', '/threads', baseURL, apiKey, null, listQuery);
+				return this.makeApiRequest(executeFunctions,  'GET', '/threads', baseURL, apiKey, undefined, listQuery);
 
 			case 'update':
-				const updateThreadId = this.getNodeParameter('threadId', itemIndex) as string;
-				const updateThreadMetadata = this.getNodeParameter('threadMetadata', itemIndex, {}) as any;
+				const updateThreadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				const updateThreadMetadata = executeFunctions.getNodeParameter('threadMetadata', itemIndex, {}) as any;
 				const updateBody: any = {};
 				
 				if (updateThreadMetadata.user_id) updateBody.user_id = updateThreadMetadata.user_id;
@@ -692,86 +702,86 @@ export class Zep implements INodeType {
 					}
 				}
 
-				return this.makeApiRequest('PATCH', `/threads/${updateThreadId}`, baseURL, apiKey, updateBody);
+				return this.makeApiRequest(executeFunctions, 'PATCH', `/threads/${updateThreadId}`, baseURL, apiKey, updateBody);
 
 			case 'delete':
-				const deleteThreadId = this.getNodeParameter('threadId', itemIndex) as string;
-				return this.makeApiRequest('DELETE', `/threads/${deleteThreadId}`, baseURL, apiKey);
+				const deleteThreadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'DELETE', `/threads/${deleteThreadId}`, baseURL, apiKey);
 
 			default:
-				throw new NodeOperationError(this.getNode(), `Unknown thread operation: ${operation}`);
+				throw new NodeOperationError(executeFunctions.getNode(), `Unknown thread operation: ${operation}`);
 		}
 	}
 
 	private async handleMessageOperation(
-		this: IExecuteFunctions,
+		executeFunctions: IExecuteFunctions,
 		operation: string,
 		itemIndex: number,
 		baseURL: string,
 		apiKey: string,
-	) {
+	): Promise<any> {
 		switch (operation) {
 			case 'add':
-				const threadId = this.getNodeParameter('threadId', itemIndex) as string;
-				const content = this.getNodeParameter('content', itemIndex) as string;
-				const role = this.getNodeParameter('role', itemIndex) as string;
+				const threadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				const content = executeFunctions.getNodeParameter('content', itemIndex) as string;
+				const role = executeFunctions.getNodeParameter('role', itemIndex) as string;
 
 				const messageBody = {
 					role,
 					content,
 				};
 
-				return this.makeApiRequest('POST', `/threads/${threadId}/messages`, baseURL, apiKey, messageBody);
+				return this.makeApiRequest(executeFunctions, 'POST', `/threads/${threadId}/messages`, baseURL, apiKey, messageBody);
 
 			case 'list':
-				const listThreadId = this.getNodeParameter('threadId', itemIndex) as string;
+				const listThreadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
 				const messageQuery: any = {};
-				const limit = this.getNodeParameter('limit', itemIndex, 50) as number;
-				const page = this.getNodeParameter('page', itemIndex, 1) as number;
+				const limit = executeFunctions.getNodeParameter('limit', itemIndex, 50) as number;
+				const page = executeFunctions.getNodeParameter('page', itemIndex, 1) as number;
 				
 				messageQuery.page_size = limit;
 				messageQuery.page_number = page;
 
-				return this.makeApiRequest('GET', `/threads/${listThreadId}/messages`, baseURL, apiKey, null, messageQuery);
+				return this.makeApiRequest(executeFunctions, 'GET', `/threads/${listThreadId}/messages`, baseURL, apiKey, undefined, messageQuery);
 
 			case 'get':
-				const getThreadId = this.getNodeParameter('threadId', itemIndex) as string;
-				const messageId = this.getNodeParameter('messageId', itemIndex) as string;
-				return this.makeApiRequest('GET', `/threads/${getThreadId}/messages/${messageId}`, baseURL, apiKey);
+				const getThreadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				const messageId = executeFunctions.getNodeParameter('messageId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'GET', `/threads/${getThreadId}/messages/${messageId}`, baseURL, apiKey);
 
 			case 'update':
-				const updateThreadId = this.getNodeParameter('threadId', itemIndex) as string;
-				const updateMessageId = this.getNodeParameter('messageId', itemIndex) as string;
-				const updateContent = this.getNodeParameter('content', itemIndex) as string;
-				const updateRole = this.getNodeParameter('role', itemIndex) as string;
+				const updateThreadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				const updateMessageId = executeFunctions.getNodeParameter('messageId', itemIndex) as string;
+				const updateContent = executeFunctions.getNodeParameter('content', itemIndex) as string;
+				const updateRole = executeFunctions.getNodeParameter('role', itemIndex) as string;
 
 				const updateMessageBody = {
 					role: updateRole,
 					content: updateContent,
 				};
 
-				return this.makeApiRequest('PATCH', `/threads/${updateThreadId}/messages/${updateMessageId}`, baseURL, apiKey, updateMessageBody);
+				return this.makeApiRequest(executeFunctions, 'PATCH', `/threads/${updateThreadId}/messages/${updateMessageId}`, baseURL, apiKey, updateMessageBody);
 
 			case 'delete':
-				const deleteThreadId = this.getNodeParameter('threadId', itemIndex) as string;
-				const deleteMessageId = this.getNodeParameter('messageId', itemIndex) as string;
-				return this.makeApiRequest('DELETE', `/threads/${deleteThreadId}/messages/${deleteMessageId}`, baseURL, apiKey);
+				const deleteThreadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				const deleteMessageId = executeFunctions.getNodeParameter('messageId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'DELETE', `/threads/${deleteThreadId}/messages/${deleteMessageId}`, baseURL, apiKey);
 
 			default:
-				throw new NodeOperationError(this.getNode(), `Unknown message operation: ${operation}`);
+				throw new NodeOperationError(executeFunctions.getNode(), `Unknown message operation: ${operation}`);
 		}
 	}
 
 	private async handleUserOperation(
-		this: IExecuteFunctions,
+		executeFunctions: IExecuteFunctions,
 		operation: string,
 		itemIndex: number,
 		baseURL: string,
 		apiKey: string,
-	) {
+	): Promise<any> {
 		switch (operation) {
 			case 'create':
-				const userData = this.getNodeParameter('userData', itemIndex, {}) as any;
+				const userData = executeFunctions.getNodeParameter('userData', itemIndex, {}) as any;
 				const createUserBody: any = {};
 				
 				if (userData.email) createUserBody.email = userData.email;
@@ -785,25 +795,25 @@ export class Zep implements INodeType {
 					}
 				}
 
-				return this.makeApiRequest('POST', '/users', baseURL, apiKey, createUserBody);
+				return this.makeApiRequest(executeFunctions, 'POST', '/users', baseURL, apiKey, createUserBody);
 
 			case 'get':
-				const userId = this.getNodeParameter('userId', itemIndex) as string;
-				return this.makeApiRequest('GET', `/users/${userId}`, baseURL, apiKey);
+				const userId = executeFunctions.getNodeParameter('userId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'GET', `/users/${userId}`, baseURL, apiKey);
 
 			case 'list':
 				const userQuery: any = {};
-				const limit = this.getNodeParameter('limit', itemIndex, 50) as number;
-				const page = this.getNodeParameter('page', itemIndex, 1) as number;
+				const limit = executeFunctions.getNodeParameter('limit', itemIndex, 50) as number;
+				const page = executeFunctions.getNodeParameter('page', itemIndex, 1) as number;
 				
 				userQuery.page_size = limit;
 				userQuery.page_number = page;
 
-				return this.makeApiRequest('GET', '/users', baseURL, apiKey, null, userQuery);
+				return this.makeApiRequest(executeFunctions, 'GET', '/users', baseURL, apiKey, undefined, userQuery);
 
 			case 'update':
-				const updateUserId = this.getNodeParameter('userId', itemIndex) as string;
-				const updateUserData = this.getNodeParameter('userData', itemIndex, {}) as any;
+				const updateUserId = executeFunctions.getNodeParameter('userId', itemIndex) as string;
+				const updateUserData = executeFunctions.getNodeParameter('userData', itemIndex, {}) as any;
 				const updateUserBody: any = {};
 				
 				if (updateUserData.email) updateUserBody.email = updateUserData.email;
@@ -817,102 +827,102 @@ export class Zep implements INodeType {
 					}
 				}
 
-				return this.makeApiRequest('PATCH', `/users/${updateUserId}`, baseURL, apiKey, updateUserBody);
+				return this.makeApiRequest(executeFunctions, 'PATCH', `/users/${updateUserId}`, baseURL, apiKey, updateUserBody);
 
 			case 'delete':
-				const deleteUserId = this.getNodeParameter('userId', itemIndex) as string;
-				return this.makeApiRequest('DELETE', `/users/${deleteUserId}`, baseURL, apiKey);
+				const deleteUserId = executeFunctions.getNodeParameter('userId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'DELETE', `/users/${deleteUserId}`, baseURL, apiKey);
 
 			default:
-				throw new NodeOperationError(this.getNode(), `Unknown user operation: ${operation}`);
+				throw new NodeOperationError(executeFunctions.getNode(), `Unknown user operation: ${operation}`);
 		}
 	}
 
 	private async handleMemoryOperation(
-		this: IExecuteFunctions,
+		executeFunctions: IExecuteFunctions,
 		operation: string,
 		itemIndex: number,
 		baseURL: string,
 		apiKey: string,
-	) {
+	): Promise<any> {
 		switch (operation) {
 			case 'getContext':
-				const threadId = this.getNodeParameter('threadId', itemIndex) as string;
-				return this.makeApiRequest('GET', `/threads/${threadId}/memory`, baseURL, apiKey);
+				const threadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'GET', `/threads/${threadId}/memory`, baseURL, apiKey);
 
 			case 'search':
-				const searchThreadId = this.getNodeParameter('threadId', itemIndex) as string;
-				const searchQuery = this.getNodeParameter('searchQuery', itemIndex) as string;
-				const limit = this.getNodeParameter('limit', itemIndex, 50) as number;
+				const searchThreadId = executeFunctions.getNodeParameter('threadId', itemIndex) as string;
+				const searchQuery = executeFunctions.getNodeParameter('searchQuery', itemIndex) as string;
+				const limit = executeFunctions.getNodeParameter('limit', itemIndex, 50) as number;
 
 				const searchBody = {
 					text: searchQuery,
 					limit,
 				};
 
-				return this.makeApiRequest('POST', `/threads/${searchThreadId}/memory/search`, baseURL, apiKey, searchBody);
+				return this.makeApiRequest(executeFunctions, 'POST', `/threads/${searchThreadId}/memory/search`, baseURL, apiKey, searchBody);
 
 			default:
-				throw new NodeOperationError(this.getNode(), `Unknown memory operation: ${operation}`);
+				throw new NodeOperationError(executeFunctions.getNode(), `Unknown memory operation: ${operation}`);
 		}
 	}
 
 	private async handleGraphOperation(
-		this: IExecuteFunctions,
+		executeFunctions: IExecuteFunctions,
 		operation: string,
 		itemIndex: number,
 		baseURL: string,
 		apiKey: string,
-	) {
+	): Promise<any> {
 		switch (operation) {
 			case 'create':
 				const createGraphBody = {
 					name: `Graph-${Date.now()}`,
 					description: 'Knowledge graph created via n8n',
 				};
-				return this.makeApiRequest('POST', '/graphs', baseURL, apiKey, createGraphBody);
+				return this.makeApiRequest(executeFunctions, 'POST', '/graphs', baseURL, apiKey, createGraphBody);
 
 			case 'get':
-				const graphId = this.getNodeParameter('graphId', itemIndex) as string;
-				return this.makeApiRequest('GET', `/graphs/${graphId}`, baseURL, apiKey);
+				const graphId = executeFunctions.getNodeParameter('graphId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'GET', `/graphs/${graphId}`, baseURL, apiKey);
 
 			case 'list':
 				const graphQuery: any = {};
-				const limit = this.getNodeParameter('limit', itemIndex, 50) as number;
-				const page = this.getNodeParameter('page', itemIndex, 1) as number;
+				const limit = executeFunctions.getNodeParameter('limit', itemIndex, 50) as number;
+				const page = executeFunctions.getNodeParameter('page', itemIndex, 1) as number;
 				
 				graphQuery.page_size = limit;
 				graphQuery.page_number = page;
 
-				return this.makeApiRequest('GET', '/graphs', baseURL, apiKey, null, graphQuery);
+				return this.makeApiRequest(executeFunctions, 'GET', '/graphs', baseURL, apiKey, undefined, graphQuery);
 
 			case 'addData':
-				const addDataGraphId = this.getNodeParameter('graphId', itemIndex) as string;
+				const addDataGraphId = executeFunctions.getNodeParameter('graphId', itemIndex) as string;
 				// This would need more specific implementation based on what data format ZEP expects
 				const graphData = {
 					data: 'Sample graph data',
 					type: 'text',
 				};
-				return this.makeApiRequest('POST', `/graphs/${addDataGraphId}/data`, baseURL, apiKey, graphData);
+				return this.makeApiRequest(executeFunctions, 'POST', `/graphs/${addDataGraphId}/data`, baseURL, apiKey, graphData);
 
 			case 'search':
-				const searchGraphId = this.getNodeParameter('graphId', itemIndex) as string;
-				const graphSearchQuery = this.getNodeParameter('searchQuery', itemIndex) as string;
-				const graphLimit = this.getNodeParameter('limit', itemIndex, 50) as number;
+				const searchGraphId = executeFunctions.getNodeParameter('graphId', itemIndex) as string;
+				const graphSearchQuery = executeFunctions.getNodeParameter('searchQuery', itemIndex) as string;
+				const graphLimit = executeFunctions.getNodeParameter('limit', itemIndex, 50) as number;
 
 				const graphSearchBody = {
 					query: graphSearchQuery,
 					limit: graphLimit,
 				};
 
-				return this.makeApiRequest('POST', `/graphs/${searchGraphId}/search`, baseURL, apiKey, graphSearchBody);
+				return this.makeApiRequest(executeFunctions, 'POST', `/graphs/${searchGraphId}/search`, baseURL, apiKey, graphSearchBody);
 
 			case 'delete':
-				const deleteGraphId = this.getNodeParameter('graphId', itemIndex) as string;
-				return this.makeApiRequest('DELETE', `/graphs/${deleteGraphId}`, baseURL, apiKey);
+				const deleteGraphId = executeFunctions.getNodeParameter('graphId', itemIndex) as string;
+				return this.makeApiRequest(executeFunctions, 'DELETE', `/graphs/${deleteGraphId}`, baseURL, apiKey);
 
 			default:
-				throw new NodeOperationError(this.getNode(), `Unknown graph operation: ${operation}`);
+				throw new NodeOperationError(executeFunctions.getNode(), `Unknown graph operation: ${operation}`);
 		}
 	}
 }
