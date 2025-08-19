@@ -586,7 +586,10 @@ export class Zep implements INodeType {
 			throw new NodeOperationError(this.getNode(), 'Missing required credentials: baseUrl and apiKey');
 		}
 
-		const nodeInstance = this as unknown as Zep;
+		// Get reference to the node instance through context
+		const node = this.getNode() as any;
+		const nodeInstance = node.nodeInstance || node;
+
 		for (let i = 0; i < items.length; i++) {
 			const resource = this.getNodeParameter('resource', i) as string;
 			const operation = this.getNodeParameter('operation', i) as string;
