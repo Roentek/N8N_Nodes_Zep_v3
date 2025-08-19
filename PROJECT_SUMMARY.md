@@ -33,6 +33,7 @@ zep_node_v3/
 ## ✨ Key Features Implemented
 
 ### 🧵 Thread Management
+
 - ✅ Create conversation threads with metadata
 - ✅ Get individual threads by ID
 - ✅ List threads with pagination
@@ -40,6 +41,7 @@ zep_node_v3/
 - ✅ Delete threads
 
 ### 💬 Message Operations  
+
 - ✅ Add messages with role support (user, assistant, system)
 - ✅ Retrieve specific messages
 - ✅ List messages in threads with pagination
@@ -47,6 +49,7 @@ zep_node_v3/
 - ✅ Delete messages
 
 ### 👤 User Management
+
 - ✅ Create user profiles with custom fields
 - ✅ Get user information by ID
 - ✅ List users with pagination
@@ -54,12 +57,14 @@ zep_node_v3/
 - ✅ Delete user accounts
 
 ### 🧠 Memory & Vector Operations
+
 - ✅ Retrieve memory context for threads
 - ✅ Vector-based similarity search across conversations
 - ✅ Semantic search with configurable limits
 - ✅ Memory persistence and retrieval
 
 ### 📊 Knowledge Graph Support
+
 - ✅ Create and manage knowledge graphs
 - ✅ Add structured data to graphs
 - ✅ Search graph data with vector similarity
@@ -68,6 +73,7 @@ zep_node_v3/
 ## 🔧 Technical Implementation
 
 ### Architecture
+
 - **TypeScript**: Full type safety and modern JavaScript features
 - **Modular Design**: Separate handlers for each resource type
 - **Error Handling**: Comprehensive error handling with graceful failures
@@ -75,6 +81,7 @@ zep_node_v3/
 - **Validation**: Parameter validation and type checking
 
 ### API Integration
+
 - **Authentication**: API key-based authentication with header injection
 - **HTTP Methods**: Support for GET, POST, PATCH, DELETE operations  
 - **Query Parameters**: Pagination, filtering, and search parameters
@@ -82,6 +89,7 @@ zep_node_v3/
 - **Response Handling**: Structured response processing and error management
 
 ### Node Configuration
+
 - **Dynamic Fields**: Context-aware field visibility based on resource/operation
 - **Custom Fields**: Flexible custom field support for extensibility
 - **Pagination**: Built-in pagination controls for list operations
@@ -107,12 +115,14 @@ zep_node_v3/
 ## 📊 Quality Assurance
 
 ### Testing
+
 - **Unit Tests**: Comprehensive test suite for all operations
 - **Mock Framework**: Jest-based testing with mocked dependencies
 - **Error Scenarios**: Tests for error handling and edge cases
 - **API Validation**: Tests for request formatting and response handling
 
 ### Code Quality
+
 - **ESLint**: n8n-specific linting rules and best practices
 - **Prettier**: Consistent code formatting
 - **TypeScript**: Type safety and compile-time error checking
@@ -121,12 +131,14 @@ zep_node_v3/
 ## 🚀 Deployment Ready
 
 ### Build System
+
 - **TypeScript Compilation**: Automated TypeScript to JavaScript compilation
 - **Asset Processing**: SVG icon processing and copying
 - **Distribution**: Automated dist folder creation
 - **Package Validation**: Pre-publish validation and linting
 
 ### Installation Methods
+
 - **npm/pnpm**: Standard package manager installation
 - **Community Package**: n8n community package support
 - **Source Installation**: Direct installation from repository
@@ -135,12 +147,14 @@ zep_node_v3/
 ## 📚 Documentation
 
 ### User Documentation
+
 - **README.md**: Complete usage guide with examples
 - **INSTALLATION.md**: Step-by-step installation instructions  
 - **EXAMPLES.md**: Real-world workflow examples
 - **CHANGELOG.md**: Version history and updates
 
 ### Developer Documentation
+
 - **Inline Comments**: Comprehensive code documentation
 - **Type Definitions**: Full TypeScript type coverage
 - **API Reference**: Complete parameter and response documentation
@@ -149,6 +163,7 @@ zep_node_v3/
 ## 🔄 Migration from v2
 
 ### Improvements Over v2
+
 - **Complete API Coverage**: Full ZEP v3 API support
 - **Enhanced Error Handling**: Better error messages and recovery
 - **Type Safety**: Full TypeScript implementation
@@ -157,6 +172,7 @@ zep_node_v3/
 - **Custom Fields**: Extensible metadata support
 
 ### Migration Path
+
 - **Drop-in Replacement**: Compatible node interface
 - **Configuration Update**: Simple credential update required
 - **Feature Enhancement**: Access to new v3 API features
@@ -165,16 +181,19 @@ zep_node_v3/
 ## 🎯 Use Cases Supported
 
 ### Chatbot Memory
+
 - **Conversation Persistence**: Long-term conversation memory
 - **Context Retrieval**: Semantic context for responses  
 - **User Personalization**: User-specific conversation history
 
 ### Customer Support
+
 - **Issue Tracking**: Thread-based issue management
 - **Knowledge Base**: Graph-based knowledge storage
 - **User Profiles**: Customer information management
 
 ### AI Assistant Integration
+
 - **Memory Context**: Rich context for AI responses
 - **Conversation Flow**: Natural conversation continuation
 - **Personalized Responses**: User-specific response generation
@@ -182,12 +201,14 @@ zep_node_v3/
 ## 🔮 Future Enhancements
 
 ### Planned Features
+
 - **Batch Operations**: Bulk data processing capabilities
 - **Webhooks**: Real-time event notifications
 - **Advanced Search**: Enhanced search filters and options
 - **Analytics**: Usage metrics and performance tracking
 
 ### Extension Points
+
 - **Custom Embeddings**: Support for custom embedding models
 - **Middleware**: Plugin architecture for custom processing
 - **Export/Import**: Data migration and backup capabilities
@@ -196,12 +217,14 @@ zep_node_v3/
 ## 📈 Performance Characteristics
 
 ### Optimization Features
+
 - **Request Caching**: Intelligent caching for repeated requests
 - **Batch Processing**: Efficient bulk operations
 - **Lazy Loading**: On-demand resource loading
 - **Memory Management**: Efficient memory usage patterns
 
 ### Scalability
+
 - **Pagination**: Handles large datasets efficiently
 - **Rate Limiting**: Respects API rate limits
 - **Connection Pooling**: Efficient HTTP connection management
@@ -210,12 +233,14 @@ zep_node_v3/
 ## 🛡 Production Readiness
 
 ### Monitoring & Observability
+
 - **Detailed Logging**: Comprehensive request/response logging
 - **Error Tracking**: Structured error reporting
 - **Performance Metrics**: Request timing and success rates
 - **Health Checks**: Connection and service health validation
 
 ### Reliability
+
 - **Error Handling**: Graceful failure management
 - **Retry Logic**: Automatic retry for transient failures
 - **Timeout Handling**: Proper timeout configuration
