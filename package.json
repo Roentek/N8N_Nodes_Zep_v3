@@ -14,12 +14,12 @@
   "license": "MIT",
   "homepage": "",
   "author": {
-    "name": "ZEP Community",
-    "email": "community@getzep.com"
+    "name": "Roentek Designs",
+    "email": "mmorar@roentekdesigns.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/getzep/n8n-nodes-zep-v3.git"
+    "url": "https://github.com/Roentek/N8N_Nodes_Zep_v3.git"
   },
   "engines": {
     "node": ">=18.10",
