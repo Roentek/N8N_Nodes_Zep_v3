@@ -246,4 +246,4 @@ zep_node_v3/
 - **Timeout Handling**: Proper timeout configuration
 - **Circuit Breaker**: Protection against cascading failures
 
-This implementation provides a robust, production-ready ZEP Memory Vector Store node that fully leverages the v3 API capabilities while maintaining the ease of use that n8n users expect
+This implementation provides a robust, production-ready ZEP Memory Vector Store node that fully leverages the v3 API capabilities while maintaining the ease of use that n8n users expect.

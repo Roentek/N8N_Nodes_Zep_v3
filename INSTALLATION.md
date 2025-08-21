@@ -28,7 +28,7 @@ pnpm add n8n-nodes-zep-v3
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/getzep/n8n-nodes-zep-v3.git
+   git clone https://github.com/Roentek/N8N_Nodes_Zep_v3.git
    cd n8n-nodes-zep-v3
    ```
 

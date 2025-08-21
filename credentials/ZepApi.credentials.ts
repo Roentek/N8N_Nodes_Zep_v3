@@ -51,6 +51,9 @@ export class ZepApi implements ICredentialType {
 			baseURL: '={{$credentials.baseUrl}}',
 			url: '/threads',
 			method: 'GET',
+			headers: {
+				Authorization: '=Api-Key {{$credentials.apiKey}}',
+			},
 		},
 	};
 }
