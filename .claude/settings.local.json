@@ -33,6 +33,7 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "n8n-mcp"
+    "n8n-mcp",
+    "zep-docs"
   ]
 }
