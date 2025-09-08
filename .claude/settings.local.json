@@ -27,7 +27,8 @@
       "WebFetch(domain:help.getzep.com)",
       "Bash(npx tsc:*)",
       "Bash(npm test)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "mcp__zep-docs__search_documentation"
     ],
     "deny": []
   },
