@@ -84,6 +84,12 @@ export class Zep implements INodeType {
 						action: 'Create a thread',
 					},
 					{
+						name: 'Delete',
+						value: 'delete',
+						description: 'Delete a thread',
+						action: 'Delete a thread',
+					},
+					{
 						name: 'Get',
 						value: 'get',
 						description: 'Get a thread by ID',
@@ -100,12 +106,6 @@ export class Zep implements INodeType {
 						value: 'update',
 						description: 'Update a thread',
 						action: 'Update a thread',
-					},
-					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Delete a thread',
-						action: 'Delete a thread',
 					},
 				],
 				default: 'list',
@@ -478,6 +478,7 @@ export class Zep implements INodeType {
 						displayName: 'Email',
 						name: 'email',
 						type: 'string',
+						placeholder: 'name@email.com',
 						default: '',
 						description: 'User email address',
 					},
@@ -543,13 +544,92 @@ export class Zep implements INodeType {
 				description: 'The search query text',
 			},
 
+			// Graph data input
+			{
+				displayName: 'Data',
+				name: 'data',
+				type: 'string',
+				typeOptions: {
+					rows: 4,
+				},
+				required: true,
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['graph'],
+						operation: ['addData'],
+					},
+				},
+				description: 'The data to add to the graph',
+			},
+
+			{
+				displayName: 'Data Type',
+				name: 'dataType',
+				type: 'options',
+				options: [
+					{
+						name: 'Text',
+						value: 'text',
+					},
+					{
+						name: 'JSON',
+						value: 'json',
+					},
+				],
+				required: true,
+				default: 'text',
+				displayOptions: {
+					show: {
+						resource: ['graph'],
+						operation: ['addData'],
+					},
+				},
+				description: 'The type of data being added',
+			},
+
+			// Graph search scope
+			{
+				displayName: 'Search Scope',
+				name: 'scope',
+				type: 'options',
+				options: [
+					{
+						name: 'Edges',
+						value: 'edges',
+						description: 'Search for relationships and facts',
+					},
+					{
+						name: 'Nodes',
+						value: 'nodes',
+						description: 'Search for entities',
+					},
+					{
+						name: 'Episodes',
+						value: 'episodes',
+						description: 'Search for episodes',
+					},
+				],
+				default: 'edges',
+				displayOptions: {
+					show: {
+						resource: ['graph'],
+						operation: ['search'],
+					},
+				},
+				description: 'The scope of the search',
+			},
+
 			// Pagination
 			{
 				displayName: 'Limit',
 				name: 'limit',
 				type: 'number',
+				typeOptions: {
+					minValue: 1,
+				},
 				default: 50,
-				description: 'Number of results to return',
+				description: 'Max number of results to return',
 				displayOptions: {
 					show: {
 						operation: ['list', 'search'],
@@ -878,18 +958,20 @@ export class Zep implements INodeType {
 		apiKey: string,
 	): Promise<any> {
 		switch (operation) {
-			case 'create':
+			case 'create': {
 				const createGraphBody = {
 					name: `Graph-${Date.now()}`,
 					description: 'Knowledge graph created via n8n',
 				};
-				return this.makeApiRequest(executeFunctions, 'POST', '/graphs', baseURL, apiKey, createGraphBody);
+				return this.makeApiRequest(executeFunctions, 'POST', '/graph', baseURL, apiKey, createGraphBody);
+			}
 
-			case 'get':
+			case 'get': {
 				const graphId = executeFunctions.getNodeParameter('graphId', itemIndex) as string;
-				return this.makeApiRequest(executeFunctions, 'GET', `/graphs/${graphId}`, baseURL, apiKey);
+				return this.makeApiRequest(executeFunctions, 'GET', `/graph/${graphId}`, baseURL, apiKey);
+			}
 
-			case 'list':
+			case 'list': {
 				const graphQuery: any = {};
 				const limit = executeFunctions.getNodeParameter('limit', itemIndex, 50) as number;
 				const page = executeFunctions.getNodeParameter('page', itemIndex, 1) as number;
@@ -898,31 +980,40 @@ export class Zep implements INodeType {
 				graphQuery.page_number = page;
 
 				return this.makeApiRequest(executeFunctions, 'GET', '/graphs', baseURL, apiKey, undefined, graphQuery);
+			}
 
-			case 'addData':
+			case 'addData': {
 				const addDataGraphId = executeFunctions.getNodeParameter('graphId', itemIndex) as string;
-				// This would need more specific implementation based on what data format ZEP expects
+				const data = executeFunctions.getNodeParameter('data', itemIndex, 'Sample graph data') as string;
+				const dataType = executeFunctions.getNodeParameter('dataType', itemIndex, 'text') as string;
+				
 				const graphData = {
-					data: 'Sample graph data',
-					type: 'text',
+					data: data,
+					type: dataType,
 				};
-				return this.makeApiRequest(executeFunctions, 'POST', `/graphs/${addDataGraphId}/data`, baseURL, apiKey, graphData);
+				return this.makeApiRequest(executeFunctions, 'POST', '/graph', baseURL, apiKey, graphData);
+			}
 
-			case 'search':
+			case 'search': {
 				const searchGraphId = executeFunctions.getNodeParameter('graphId', itemIndex) as string;
 				const graphSearchQuery = executeFunctions.getNodeParameter('searchQuery', itemIndex) as string;
 				const graphLimit = executeFunctions.getNodeParameter('limit', itemIndex, 50) as number;
+				const scope = executeFunctions.getNodeParameter('scope', itemIndex, 'edges') as string;
 
 				const graphSearchBody = {
+					graph_id: searchGraphId,
 					query: graphSearchQuery,
 					limit: graphLimit,
+					scope: scope,
 				};
 
-				return this.makeApiRequest(executeFunctions, 'POST', `/graphs/${searchGraphId}/search`, baseURL, apiKey, graphSearchBody);
+				return this.makeApiRequest(executeFunctions, 'POST', '/graph/search', baseURL, apiKey, graphSearchBody);
+			}
 
-			case 'delete':
+			case 'delete': {
 				const deleteGraphId = executeFunctions.getNodeParameter('graphId', itemIndex) as string;
-				return this.makeApiRequest(executeFunctions, 'DELETE', `/graphs/${deleteGraphId}`, baseURL, apiKey);
+				return this.makeApiRequest(executeFunctions, 'DELETE', `/graph/${deleteGraphId}`, baseURL, apiKey);
+			}
 
 			default:
 				throw new NodeOperationError(executeFunctions.getNode(), `Unknown graph operation: ${operation}`);

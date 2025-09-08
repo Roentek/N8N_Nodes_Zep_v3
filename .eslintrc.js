@@ -16,7 +16,7 @@ module.exports = {
 	],
 	extends: [
 		'eslint:recommended',
-		'@typescript-eslint/recommended',
+		'plugin:@typescript-eslint/recommended',
 		'plugin:n8n-nodes-base/nodes',
 	],
 	rules: {
