@@ -1,5 +1,7 @@
 # ZEP Memory Vector Store Node (v3) for n8n
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This is a custom n8n node package that provides a comprehensive n8n community node for integrating with ZEP Memory Vector Store v3 API. This node provides full CRUD operations for threads, messages, users, memory, and knowledge graphs.. ZEP is a long-term memory service for AI assistants and chatbots.
 
 ## ✅ Production Ready Status
