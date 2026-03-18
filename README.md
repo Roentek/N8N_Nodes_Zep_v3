@@ -488,10 +488,6 @@ Memory and graph search operations use vector similarity:
 - **n8n Community**: [https://community.n8n.io/](https://community.n8n.io/)
 - **GitHub Issues**: Report bugs and request features
 
-## License
-
-MIT License - see LICENSE file for details.
-
 ## Contributing
 
 Contributions are welcome! Please:
@@ -511,3 +507,9 @@ Contributions are welcome! Please:
 - Comprehensive error handling and validation
 - Custom fields support
 - Vector search capabilities
+
+## License
+
+MIT License - Copyright (c) 2026 Roentek Designs
+
+See [LICENSE](LICENSE) for details.
